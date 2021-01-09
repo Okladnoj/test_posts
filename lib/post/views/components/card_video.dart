@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'form_card.dart';
+
 import 'actions/open_file.dart';
-import 'form._card.dart';
 
 import '../../cubit/models/model_post.dart';
 

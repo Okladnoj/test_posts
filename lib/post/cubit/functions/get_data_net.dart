@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../models/model_post.dart';
-import '../../settings.dart';
+import '../../../settings/settings.dart';
 
 Future<List<IPost>> gFunctionGetDataNet() async {
   List<IPost> _listPosts = [];

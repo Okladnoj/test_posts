@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
@@ -24,8 +22,13 @@ class CropCubit extends Cubit<CropedState> {
     emit(CropInitial(isPostArlet: false));
   }
 
-  cropAply(ICrop crop) {
-    emit(CropInitial(isPostArlet: false));
+  cropAply(ICrop crop) async {
+    crop.file = await cropImage(crop);
+    emit(CropInitial(isPostArlet: true, isCroped: true, crop: crop));
+  }
+
+  onPost(ICrop crop) {
+    emit(CropInitial(isPostArlet: false, isCroped: false, crop: crop));
     gPostCropFile(crop);
   }
 }

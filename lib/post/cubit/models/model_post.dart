@@ -1,3 +1,5 @@
+import 'package:tape_posts/crop/cubit/model/model_crop.dart';
+
 import 'model_post_save.dart';
 
 abstract class IPost {
@@ -68,6 +70,18 @@ class ModelVideo implements IPost {
         poster = json['poster'],
         postId = json['post_id'];
 
+  ModelVideo.fromCrop(ICrop crop)
+      : id = null,
+        title = crop.title,
+        content = crop.content,
+        takenAt = null,
+        isVideo = null,
+        base = null,
+        file = crop.file.path,
+        preview = crop.file.path,
+        poster = null,
+        postId = null;
+
   @override
   String get urlFile => '$base$file';
 
@@ -114,7 +128,17 @@ class ModelImages implements IPost {
         preview = json['preview'],
         poster = json['poster'],
         postId = json['post_id'];
-
+  ModelImages.fromCrop(ICrop crop)
+      : id = null,
+        title = crop.title,
+        content = crop.content,
+        takenAt = null,
+        isVideo = null,
+        base = null,
+        file = crop.file.path,
+        preview = crop.file.path,
+        poster = null,
+        postId = null;
   @override
   String get urlFile => '$base$file';
 

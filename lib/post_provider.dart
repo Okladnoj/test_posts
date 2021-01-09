@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tape_posts/crop/views/post_screen.dart';
 
 import 'post/posts.dart';
 import 'crop/posts.dart';
@@ -15,9 +16,13 @@ class PostProvider extends StatelessWidget {
       ],
       child: BlocBuilder<CropCubit, CropedState>(builder: (context, snapshot) {
         return snapshot.isPostArlet
-            ? CorpScreen(
-                crop: snapshot.crop,
-              )
+            ? snapshot.isCroped
+                ? PostScreen(
+                    crop: snapshot.crop,
+                  )
+                : CorpScreen(
+                    crop: snapshot.crop,
+                  )
             : MainScreen();
       }),
     );

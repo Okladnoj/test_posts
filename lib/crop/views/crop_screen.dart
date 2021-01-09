@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubit/model/model_crop.dart';
 import '../posts.dart';
+import 'components/components.dart';
 
 class CorpScreen extends StatelessWidget {
   final ICrop crop;
@@ -26,6 +27,7 @@ class CorpScreen extends StatelessWidget {
             ),
           ),
           CropFrame(
+            key: key,
             crop: crop,
           ),
           Column(
@@ -59,26 +61,6 @@ class CorpScreen extends StatelessWidget {
       )),
     );
   }
-
-  GestureDetector actionAfterCrop({Function onTap, String lable}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        alignment: Alignment(0, 0),
-        color: Color(0xFF212528),
-        width: 124,
-        height: 42,
-        child: Text(
-          lable,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            color: Color(0xFFFFFFFF),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class CropFrame extends StatefulWidget {
@@ -95,27 +77,58 @@ class _CropFrameState extends State<CropFrame> {
   double _width;
   double _height;
   ICrop _crop;
+  ICrop _cropInit;
+  double dYCorrect;
+  double maxWidth;
+  double maxHeight;
+
+  /// Borders of crop current Rectangle
+  double topCurrentBorder;
+  double rightCurrentBorder;
+  double bottomCurrentBorder;
+  double leftCurrentBorder;
+
+  double topBorder;
+  double rightBorder;
+  double bottomBorder;
+  double leftBorder;
+
+  /// Scale koeff
+  double _koef;
   @override
   void initState() {
-    _crop = widget.crop;
+    _cropInit = _crop = widget.crop;
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, snapshot) {
-      double maxWidth = snapshot.maxWidth;
-      double maxHeight = snapshot.maxHeight;
-      double _koef = maxWidth / _crop.width;
+      maxWidth = maxWidth ?? snapshot.maxWidth;
+      maxHeight = maxHeight ?? snapshot.maxHeight;
+      _koef = _koef ?? maxWidth / _cropInit.width;
+      dYCorrect = dYCorrect ?? (maxHeight / 2 - _cropInit.height * _koef / 2);
+
       _originX = _originX ?? 0;
-      _originY = _originY ?? (maxHeight / 2 - _crop.height * _koef / 2);
-      _width = _width ?? _crop.width * _koef;
-      _height = _height ?? _crop.height * _koef;
+      _originY = _originY ?? dYCorrect;
+      _width = _width ?? _cropInit.width * _koef;
+      _height = _height ?? _cropInit.height * _koef;
+
+      bottomCurrentBorder = _originY + _height;
+      rightCurrentBorder = _originX + _width;
+      leftCurrentBorder = _originX;
+      topCurrentBorder = _originY;
+
+      topBorder = topBorder ?? topCurrentBorder;
+      rightBorder = rightBorder ?? rightCurrentBorder;
+      bottomBorder = bottomBorder ?? bottomCurrentBorder;
+      leftBorder = leftBorder ?? leftCurrentBorder;
+
       _crop
-        ..height = _height.i
-        ..width = _width.i
-        ..originX = _originX.i
-        ..originY = _originY.i;
+        ..height = (_height / _koef).i
+        ..width = (_width / _koef).i
+        ..originX = (_originX / _koef).i
+        ..originY = ((_originY - dYCorrect) / _koef).i;
       return Container(
         width: maxWidth,
         height: maxHeight,
@@ -189,7 +202,7 @@ class _CropFrameState extends State<CropFrame> {
         child: Row(children: [_cellGird(_dragLeft), _cellGird(_dragCentr), _cellGird(_dragRight)]),
       );
   Widget _rowBotom() => Expanded(
-        child: Row(children: [_cellGird(_bottomTopLeft), _cellGird(_dragBottom), _cellGird(_bottomTopRight)]),
+        child: Row(children: [_cellGird(_bottomLeft), _cellGird(_dragBottom), _cellGird(_bottomRight)]),
       );
 
   Expanded _cellGird([Function(Offset globalPosition) dragFunction]) => Expanded(
@@ -208,6 +221,18 @@ class _CropFrameState extends State<CropFrame> {
   _dragTopLeft(Offset globalPosition) {
     double dX = globalPosition.dx;
     double dY = globalPosition.dy;
+
+    dY = (dY < topBorder)
+        ? topBorder
+        : (dY >= bottomCurrentBorder)
+            ? bottomCurrentBorder
+            : dY;
+    dX = (dX < 0)
+        ? (0)
+        : (dX >= rightCurrentBorder)
+            ? rightCurrentBorder
+            : dX;
+
     setState(() {
       _width += (_originX - dX);
       _height += (_originY - dY);
@@ -219,6 +244,18 @@ class _CropFrameState extends State<CropFrame> {
   _dragTopRight(Offset globalPosition) {
     double dX = globalPosition.dx;
     double dY = globalPosition.dy;
+
+    dY = (dY < topBorder)
+        ? topBorder
+        : (dY >= bottomCurrentBorder)
+            ? bottomCurrentBorder
+            : dY;
+    dX = (dX < leftCurrentBorder)
+        ? leftCurrentBorder
+        : (dX >= rightBorder)
+            ? rightBorder
+            : dX;
+
     setState(() {
       _width -= (_originX + _width - dX);
       _height += (_originY - dY);
@@ -226,9 +263,42 @@ class _CropFrameState extends State<CropFrame> {
     });
   }
 
-  _bottomTopLeft(Offset globalPosition) {
+  _bottomRight(Offset globalPosition) {
     double dX = globalPosition.dx;
     double dY = globalPosition.dy;
+
+    dY = (dY < topCurrentBorder)
+        ? topCurrentBorder
+        : (dY >= bottomBorder)
+            ? bottomBorder
+            : dY;
+    dX = (dX > rightBorder)
+        ? rightBorder
+        : (dX <= leftCurrentBorder)
+            ? leftCurrentBorder
+            : dX;
+
+    setState(() {
+      _width -= (_originX + _width - dX);
+      _height -= (_originY + _height - dY);
+    });
+  }
+
+  _bottomLeft(Offset globalPosition) {
+    double dX = globalPosition.dx;
+    double dY = globalPosition.dy;
+
+    dY = (dY < topCurrentBorder)
+        ? topCurrentBorder
+        : (dY >= bottomBorder)
+            ? bottomBorder
+            : dY;
+    dX = (dX < leftBorder)
+        ? leftBorder
+        : (dX >= rightCurrentBorder)
+            ? rightCurrentBorder
+            : dX;
+
     setState(() {
       _width += (_originX - dX);
       _height -= (_originY + _height - dY);
@@ -236,17 +306,15 @@ class _CropFrameState extends State<CropFrame> {
     });
   }
 
-  _bottomTopRight(Offset globalPosition) {
-    double dX = globalPosition.dx;
-    double dY = globalPosition.dy;
-    setState(() {
-      _width -= (_originX + _width - dX);
-      _height -= (_originY + _height - dY);
-    });
-  }
-
   _dragTop(Offset globalPosition) {
     double dY = globalPosition.dy;
+
+    dY = (dY < topBorder)
+        ? topBorder
+        : (dY >= bottomCurrentBorder)
+            ? bottomCurrentBorder
+            : dY;
+
     setState(() {
       _height += (_originY - dY);
       _originY = dY;
@@ -255,6 +323,13 @@ class _CropFrameState extends State<CropFrame> {
 
   _dragRight(Offset globalPosition) {
     double dX = globalPosition.dx;
+
+    dX = (dX < leftCurrentBorder)
+        ? leftCurrentBorder
+        : (dX >= rightBorder)
+            ? rightBorder
+            : dX;
+
     setState(() {
       _width -= (_originX + _width - dX);
     });
@@ -262,6 +337,13 @@ class _CropFrameState extends State<CropFrame> {
 
   _dragBottom(Offset globalPosition) {
     double dY = globalPosition.dy;
+
+    dY = (dY < topCurrentBorder)
+        ? topCurrentBorder
+        : (dY >= bottomBorder)
+            ? bottomBorder
+            : dY;
+
     setState(() {
       _height -= (_originY + _height - dY);
     });
@@ -269,6 +351,13 @@ class _CropFrameState extends State<CropFrame> {
 
   _dragLeft(Offset globalPosition) {
     double dX = globalPosition.dx;
+
+    dX = (dX < leftBorder)
+        ? leftBorder
+        : (dX >= rightCurrentBorder)
+            ? rightCurrentBorder
+            : dX;
+
     setState(() {
       _width += (_originX - dX);
       _originX = dX;
@@ -278,6 +367,18 @@ class _CropFrameState extends State<CropFrame> {
   _dragCentr(Offset globalPosition) {
     double dX = globalPosition.dx;
     double dY = globalPosition.dy;
+
+    dY = (dY < topBorder + _height / 2)
+        ? topBorder + _height / 2
+        : (dY >= bottomBorder - _height / 2)
+            ? bottomBorder - _height / 2
+            : dY;
+    dX = (dX < leftBorder + _width / 2)
+        ? leftBorder + _width / 2
+        : (dX >= rightBorder - _width / 2)
+            ? rightBorder - _width / 2
+            : dX;
+
     setState(() {
       _originX = dX - _width / 2;
       _originY = dY - _height / 2;

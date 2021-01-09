@@ -8,6 +8,8 @@ abstract class ICrop {
   int width = 20;
   int height = 20;
   File file;
+  String title = '';
+  String content = '';
 }
 
 class CropImage implements ICrop {
@@ -25,6 +27,13 @@ class CropImage implements ICrop {
 
   @override
   File file;
+
+  @override
+  String content;
+
+  @override
+  String title;
+
   CropImage(this.file) {
     originX = 0;
     originY = 0;
